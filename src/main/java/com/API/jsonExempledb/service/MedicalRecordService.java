@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.API.jsonExempledb.model.MedicalRecord;
-import com.API.jsonExempledb.model.Medications;
 import com.API.jsonExempledb.repository.MedicalRecordRepository;
 
 

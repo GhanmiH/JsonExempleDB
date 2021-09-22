@@ -1,10 +1,14 @@
 package com.API.jsonExempledb;
 
+import com.API.jsonExempledb.model.Allergies;
 import com.API.jsonExempledb.model.FireStation;
 import com.API.jsonExempledb.model.MedicalRecord;
+import com.API.jsonExempledb.model.Medications;
 import com.API.jsonExempledb.model.Person;
+import com.API.jsonExempledb.service.AllergieService;
 import com.API.jsonExempledb.service.FireStationService;
 import com.API.jsonExempledb.service.MedicalRecordService;
+import com.API.jsonExempledb.service.MedicationService;
 import com.API.jsonExempledb.service.PersonService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -80,6 +84,40 @@ public class JsonExempledbApplication {
 				System.out.println("Medical Records Saved!");
 			} catch (IOException e) {
 				System.out.println("Unable to save medical records: " + e.getMessage());
+			}
+		};
+	}
+	/*@Bean
+	CommandLineRunner runner4(MedicationService medicationService) {
+		return args -> {
+			// read JSON and load json
+			ObjectMapper mapper = new ObjectMapper();
+			TypeReference<List<Medications>> typeReference = new TypeReference<List<Medications>>() {
+			};
+			InputStream inputStream = TypeReference.class.getResourceAsStream("/json/medications.json");
+			try {
+				List<Medications> medications = mapper.readValue(inputStream, typeReference);
+				medicationService.save(medications);
+				System.out.println("Medications Saved!");
+			} catch (IOException e) {
+				System.out.println("Unable to save medications: " + e.getMessage());
+			}
+		};
+	}*/
+	@Bean
+	CommandLineRunner runner5(AllergieService allergieService) {
+		return args -> {
+			// read JSON and load json
+			ObjectMapper mapper = new ObjectMapper();
+			TypeReference<List<Allergies>> typeReference = new TypeReference<List<Allergies>>() {
+			};
+			InputStream inputStream = TypeReference.class.getResourceAsStream("/json/allergies.json");
+			try {
+				List<Allergies> allergies = mapper.readValue(inputStream, typeReference);
+				allergieService.save(allergies);
+				System.out.println("Allergies Saved!");
+			} catch (IOException e) {
+				System.out.println("Unable to save allergies: " + e.getMessage());
 			}
 		};
 	}
