@@ -2,29 +2,89 @@ package com.API.jsonExempledb.service;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.API.jsonExempledb.model.MedicalRecord;
-import com.API.jsonExempledb.repository.MedicalRecordRepository;
 
+import com.API.jsonExempledb.model.MedicalRecord;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Service
+@Slf4j
+@Data
 public class MedicalRecordService {
+	private static final Logger log = LogManager.getLogger(MedicalRecordService.class);
+    private IDataService dataService;
+    private List<MedicalRecord> medicalRecordList;
 
-	private MedicalRecordRepository medicalrecordRepository;
-
-    public MedicalRecordService(MedicalRecordRepository medicalrecordRepository) {
-        this.medicalrecordRepository = medicalrecordRepository;
+    public MedicalRecordService(IDataService dataService){
+        this.dataService = dataService;
+        medicalRecordList = dataService.getAllMedicalRecords();
     }
+
+    /**
+     * Get all medical records available
+     * @return A list of medical records
+     */
     public Iterable<MedicalRecord> list() {
-        return medicalrecordRepository.findAll();
+        return medicalRecordList;
     }
-    public MedicalRecord save(MedicalRecord medicalrecord){
-        return medicalrecordRepository.save(medicalrecord);
+
+    /**
+     * Add a medical record
+     * @param medicalRecord A MedicalRecord object with at least a valid first name and last name
+     * @return The added record or null if the operation failed
+     */
+    public MedicalRecord addMedicalRecord(MedicalRecord medicalRecord) {
+
+        if (!medicalRecord.getFirstName().isBlank() && !medicalRecord.getLastName().isBlank()){
+            medicalRecordList.add(medicalRecord);
+            log.info("Medical record successfully added");
+            return medicalRecord;
+        }
+        log.error("Failed to add the medical record");
+        return null;
     }
-	public void save(List<MedicalRecord> medicalrecords) {
-		medicalrecordRepository.saveAll(medicalrecords);
-		
-	}
-	
+
+    /**
+     * Update an existing medical record
+     * @param medicalRecord A MedicalRecord object
+     * @return The updated record or null
+     */
+    public MedicalRecord updateMedicalRecord(MedicalRecord medicalRecord) {
+        Optional<MedicalRecord> updatedRecord = medicalRecordList.stream()
+                .filter(mr -> mr.getFirstName().equals(medicalRecord.getFirstName()) && mr.getLastName().equals(medicalRecord.getLastName()))
+                .peek(mr -> {
+                    mr.setBirthdate(medicalRecord.getBirthdate());
+                    mr.setMedications(medicalRecord.getMedications());
+                    mr.setAllergies(medicalRecord.getAllergies());
+                })
+                .findFirst();
+        if (updatedRecord.isPresent()){
+            log.info(medicalRecord.getFirstName() + " " +medicalRecord.getLastName() + "'s medical record successfully updated!");
+            return updatedRecord.get();
+        }
+        log.error("Failed to update "+medicalRecord.getFirstName() + " " +medicalRecord.getLastName() + "'s medical record");
+        return null;
+    }
+
+    /**
+     * Delete an existing medical record
+     * @param firstName first name
+     * @param lastName last name
+     * @return True or false depending on the successfulness or failure of the operation
+     */
+    public boolean deleteMedicalRecord(String firstName, String lastName) {
+        boolean removed = medicalRecordList.removeIf(mr -> firstName.equals(mr.getFirstName()) && lastName.equals(mr.getLastName()));
+        if(removed){
+            log.info("Medical record successfully removed");
+        } else {
+            log.error("Failed to remove the medical record");
+        }
+        return removed;
+    }
 }

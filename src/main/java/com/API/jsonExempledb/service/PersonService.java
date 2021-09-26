@@ -7,120 +7,92 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-
 import com.API.jsonExempledb.model.Person;
-import com.API.jsonExempledb.repository.PersonRepository;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
+
 
 @Service
+@Data
+@Slf4j
 public class PersonService {
+	private static final Logger log = LogManager.getLogger(PersonService.class);
+    private IDataService dataService;
 
-	private static final Logger logger = LogManager.getLogger(PersonService.class);
-	
-	private PersonRepository personRepository;
+    private List<Person> personList;
 
-	public PersonService(PersonRepository personRepository) {
-		this.personRepository = personRepository;
-	}
+    public PersonService(IDataService dataService){
+        this.dataService = dataService;
+        personList = dataService.getAllPersons();
+    }
 
-	public Iterable<Person> list() {
-		return personRepository.findAll();
-	}
+    /**
+     * Add a person
+     * @param person Person object
+     * @return The added object or null
+     */
+    public Person addPerson(Person person){
 
-	public Person save(Person person) {
-		return personRepository.save(person);
-	}
+        if(!person.getFirstName().isBlank() && !person.getLastName().isBlank()){
+            personList.add(person);
+            log.info(person.getFirstName() + " " + person.getLastName() + " successfully added!");
+            return person;
+        }
+        log.error("Failed to add the person");
 
-	public void save(List<Person> persons) {
-		personRepository.saveAll(persons);
+        return null;
+    }
 
-	}
+    /**
+     * Get all persons
+     * @return List<Person>
+     */
+    public List<Person> list(){
+        return personList;
+    }
 
-	/**
-	 * Returns all of the existing people
-	 *
-	 */
-	public Iterable<Person> getAllPersons() {
-		return personRepository.findAll();
+    /**
+     * Update an existing person
+     * @param person Person object
+     * @return The updated object or null
+     */
+    public Person updatePerson(Person person) {
 
-	}
+        Optional<Person> updatedPerson = personList.stream()
+                .filter(p -> p.getFirstName().equals(person.getFirstName()) && p.getLastName().equals(person.getLastName()) )
+                .peek(p -> {
+                    p.setAddress(person.getAddress());
+                    p.setCity(person.getCity());
+                    p.setZip(person.getZip());
+                    p.setPhone(person.getPhone());
+                    p.setEmail(person.getEmail());
+                })
+                .findFirst();
+        if (updatedPerson.isPresent()){
+            log.info(person.getFirstName() + " " +person.getLastName() + "'s record successfully updated!");
+            return updatedPerson.get();
+        }else {
+            log.error("Failed to update person "+person.getFirstName() + " " +person.getLastName());
+        }
 
-	/**
-	 * add a person
-	 * 
-	 * @param person to add
-	 * @return person added, or null object
-	 * @throws Exception
-	 */
-	public Person addPerson(Person person) throws Exception {
+        return null;
+    }
 
-		try {
-			personRepository.save(person);
-		} catch (Exception exception) {
+    /**
+     * Delete an existing person
+     * @param firstName person's first name
+     * @param lastName person's last name
+     * @return True or false depending on the successfulness or failure of the operation
+     */
+    public boolean deletePerson(String firstName, String lastName) {
 
-			throw new Exception("The person could not be added:" + exception.getMessage());
-		}
-		return person;
-	}
-
-	/**
-	 * delete one person if exist
-	 * 
-	 * @param person to delete
-	 */
-	public void deletePerson(Person person) {
-		personRepository.removeByFirstNameAndLastName(person.getFirstName(), person.getLastName());
-	}
-
-	/**
-	 * Update a person if exists
-	 *
-	 * @param person to update
-	 * @return person update, or null object, or person doesn't exist
-	 */
-	public Person updatePerson(Person person) {
-		if (person != null) {
-			Optional<Person> personOptional = this.getPersonByFirstNameAndLastName(person.getFirstName(),
-					person.getLastName());
-
-			if (personOptional.isPresent()) {
-				Person personToUpdate = personOptional.get();
-
-				personToUpdate.setAddress(person.getAddress());
-				personToUpdate.setCity(person.getCity());
-				personToUpdate.setEmail(person.getEmail());
-				personToUpdate.setPhone(person.getPhone());
-				personToUpdate.setZip(person.getZip());
-
-				try {
-					personRepository.save(personToUpdate);
-					return personToUpdate;
-				} catch (Exception exception) {
-					logger.error("error while updating e person : " + exception.getMessage() + " StackTrace : "
-							+ exception.getStackTrace());
-					return null;
-				}
-			} else {
-				logger.error("error while updating e person : Person doesn't exist");
-				return null;
-			}
-		} else {
-			logger.error("error while updating e person :  object null");
-			return null;
-		}
-	}
-
-	/**
-	 * return list of exist person
-	 *
-	 * @return list of exist person
-	 */
-	public Optional<Person> getPersonByFirstNameAndLastName(String firstname, String lastname) {
-		try {
-			return personRepository.findByFirstNameAndLastNameAllIgnoreCase(firstname, lastname);
-		} catch (Exception exception) {
-			logger.error("Error while getting a person: " + exception.getMessage() + " Stack Trace + "
-					+ exception.getStackTrace());
-			return null;
-		}
-}
+       boolean removed = personList.removeIf(p -> firstName.equals(p.getFirstName()) && lastName.equals(p.getLastName()));
+       if (removed){
+           log.info(firstName + " " +lastName + "'s record successfully deleted!");
+       }else {
+           log.error("Failed to delete person "+firstName + " " +lastName);
+       }
+       return removed;
+    }
 }

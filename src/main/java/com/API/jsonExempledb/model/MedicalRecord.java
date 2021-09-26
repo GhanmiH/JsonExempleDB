@@ -2,55 +2,53 @@ package com.API.jsonExempledb.model;
 
 
 
-import java.time.LocalDate;
-
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@MappedSuperclass
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
+public class MedicalRecord {
 
-public abstract class MedicalRecord {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@JsonProperty("id")
-	private Long id;
-
-	@JsonProperty("firstName")
-	private String firstName;
-
-	@JsonProperty("lastName")
-	private String lastName;
-
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yyyy")
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonSerialize(using = LocalDateSerializer.class)
-    private LocalDate birthdate;
-
-	@Embedded
-	
-	private Allergies allergies;
-	
-	@Embedded
-	private Medications medications;
-	
-	public MedicalRecord() {
+    private String firstName;
+    private String lastName;
+    private String birthdate;
+    private List<String> medications;
+    private List<String> allergies;
+	public String getFirstName() {
+		return firstName;
 	}
-	
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+	public String getLastName() {
+		return lastName;
+	}
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+	public String getBirthdate() {
+		return birthdate;
+	}
+	public void setBirthdate(String birthdate) {
+		this.birthdate = birthdate;
+	}
+	public List<String> getMedications() {
+		return medications;
+	}
+	public void setMedications(List<String> medications) {
+		this.medications = medications;
+	}
+	public List<String> getAllergies() {
+		return allergies;
+	}
+	public void setAllergies(List<String> allergies) {
+		this.allergies = allergies;
+	}
+    
 }

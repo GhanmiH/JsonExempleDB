@@ -1,69 +1,70 @@
 package com.API.jsonExempledb.controller;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import com.API.jsonExempledb.model.Person;
 import com.API.jsonExempledb.service.PersonService;
 
-@RestController
+import java.util.List;
 
+@RestController
+@RequestMapping("/person")
+@Slf4j
 public class PersonController {
 
-	private static final Logger logger = LogManager.getLogger(PersonController.class); 
-	
-	private PersonService personService;
+    private PersonService personService;
+    private static final Logger log = LogManager.getLogger(PersonController.class);
+    public PersonController(PersonService personService){
+        this.personService = personService;
+    }
 
-	public PersonController(PersonService personService) {
-	        this.personService = personService;
-	    }
-	
-	@GetMapping("/person")
-	public Iterable<Person> getAllPersons() {
-		logger.info("req Get endpoint Person");
-		Iterable<Person> personIterable = personService.getAllPersons();
-		logger.info("req next Get endpoint Person");
-		return personIterable;
+    @GetMapping
+    public ResponseEntity<List<Person>> list(){
+        log.info("Get person list call");
+        List<Person> persons = personService.list();
+        log.info("Get person list return => "+persons);
+        return new ResponseEntity<>(persons, HttpStatus.OK);
+    }
 
-	}
-	@PostMapping(value = "/person")
-	public Person addPerson(@RequestBody Person person) throws Exception {
-		logger.info("req Put endpoint 'person'");
+    @PostMapping
+    public ResponseEntity<Person> addPerson(@RequestBody Person person){
+        log.info("addPerson call "+person);
+        Person addedPerson = personService.addPerson(person);
+        if (addedPerson != null){
+            log.info("addPerson return => "+ addedPerson);
+            return new ResponseEntity<>(addedPerson, HttpStatus.CREATED);
+        }
+        log.error("addPerson return => "+ null);
+        return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+    }
 
-		Person updatedPerson = personService.addPerson(person);
-		if (updatedPerson != null) {
-			logger.info("req next Put endpoint 'person' ");
-			return updatedPerson;
-		} else {
-			throw new Exception("person.added.error");
-		}
-	}
-	
-	@DeleteMapping("/person")
-	@Transactional
-	public void deletePerson(@RequestBody Person person) {
-		logger.info("Req Delete  endpoint 'person'");
-		personService.deletePerson(person);
+    @PutMapping
+    public ResponseEntity<Person> updatePerson(@RequestBody Person person){
+        log.info("Request updatePerson "+person);
+        Person updatedPerson = personService.updatePerson(person);
+        if(updatedPerson != null){
+            log.info("Response updatePerson => "+updatedPerson);
+            return new ResponseEntity<>(updatedPerson, HttpStatus.OK);
+        }
+        log.error("Response updatePerson => "+null);
+        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
 
-	}
-
-	@PutMapping("/person")
-	public Person updatePerson(@RequestBody Person person) throws Exception {
-		logger.info("req Put endpoint 'person'");
-
-		Person updatedPerson = personService.updatePerson(person);
-		if (updatedPerson != null) {
-			logger.info("req next Put endpoint 'person' ");
-			return updatedPerson;
-		} else {
-			throw new Exception("person.update.error");
-		}
-	}
+    @DeleteMapping
+    public ResponseEntity<String> deletePerson(@RequestParam String firstName, @RequestParam String lastName){
+        log.info("Request deletePerson "+ firstName + " " +lastName);
+        boolean removed = personService.deletePerson(firstName, lastName);
+        if(removed){
+            log.info("Response deletePerson => "+true);
+            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+        }
+        log.error("Response deletePerson => "+false);
+        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
 }
